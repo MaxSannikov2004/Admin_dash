@@ -1,0 +1,21 @@
+<?php
+$string['pluginname'] = 'Admin Dashboard';
+$string['filter_category'] = 'Category';
+$string['filter_course'] = 'Course';
+$string['filter_group'] = 'Group';
+$string['filter_from'] = 'From';
+$string['filter_to'] = 'To';
+$string['apply'] = 'Apply';
+$string['loading'] = 'Loading...';
+$string['kpi_grade_avg'] = 'Average grade %';
+$string['kpi_attendance'] = 'Attendance';
+$string['kpi_students'] = 'Students in group';
+$string['grades_by_group'] = 'Grades by group';
+$string['attendance_by_group'] = 'Attendance by group';
+$string['no_data'] = 'No data';
+$string['element'] = 'Element';
+$string['tab_grades'] = 'Grades';
+$string['tab_attendance'] = 'Attendance';
+$string['note_editor_title'] = 'Curator note';
+$string['save'] = 'Save';
+$string['cancel'] = 'Cancel';
