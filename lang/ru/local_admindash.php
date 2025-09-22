@@ -1,0 +1,21 @@
+<?php
+$string['pluginname'] = 'Дашборд администратора';
+$string['filter_category'] = 'Категория';
+$string['filter_course'] = 'Курс';
+$string['filter_group'] = 'Группа';
+$string['filter_from'] = 'С';
+$string['filter_to'] = 'По';
+$string['apply'] = 'Применить';
+$string['loading'] = 'Загрузка...';
+$string['kpi_grade_avg'] = 'Средний % по оценкам';
+$string['kpi_attendance'] = 'Посещаемость';
+$string['kpi_students'] = 'Студентов в группе';
+$string['grades_by_group'] = 'Успеваемость по группе';
+$string['attendance_by_group'] = 'Посещаемость по группе';
+$string['no_data'] = 'Нет данных';
+$string['element'] = 'Элемент';
+$string['tab_grades'] = 'Успеваемость';
+$string['tab_attendance'] = 'Посещаемость';
+$string['note_editor_title'] = 'Заметка куратора';
+$string['save'] = 'Сохранить';
+$string['cancel'] = 'Отмена';
