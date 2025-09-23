@@ -29,15 +29,79 @@
 .cd-matrix.att.compact-2 th, .cd-matrix.att.compact-2 td { min-width: 44px; font-size: 12px; }
 .cd-matrix.att.compact-3 th, .cd-matrix.att.compact-3 td { min-width: 36px; font-size: 11px; }
 
-/* Comment indicators (fix positioning + robust glyphs) */
-.cd-has-comment, .cd-has-cdnote { position: relative; }
+/* Comment indicators (subtle and non-intrusive)
+   - teacher comments show a small chat glyph in the top-right
+   - curator notes show a small folded-corner marker + tiny pen glyph
+*/
+.cd-has-comment { position: relative; }
 .cd-has-comment::after{
-  content:'💬'; position:absolute; right:6px; top:4px; font-size:12px; line-height:1; opacity:.65; z-index:4; pointer-events:none;
+  content: '💬';
+  position: absolute;
+  right: 6px;
+  top: 4px;
+  font-size: 12px;
+  line-height: 1;
+  opacity: .9;
+  z-index: 10001; /* ensure visibility above table cells */
+  pointer-events: none;
+}
+
+/* folded-corner + small pen for curator notes */
+.cd-has-cdnote { position: relative; overflow: visible; }
+.cd-has-cdnote::before{
+  /* tiny folded corner */
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-bottom: 10px solid #FFD952; /* light warm color */
+  border-bottom-left-radius: 2px;
+  z-index: 10001; /* ensure visibility above table cells */
+  pointer-events: none;
 }
 .cd-has-cdnote::after{
-  content:'✎'; position:absolute; right:6px; bottom:4px; font-size:12px; line-height:1; opacity:.65; z-index:4; pointer-events:none;
+  /* tiny pen glyph on the corner */
+  content: '✎';
+  position: absolute;
+  right: 2px;
+  top: 1px;
+  font-size: 9px;
+  line-height: 1;
+  color: #5b4300;
+  opacity: .95;
+  z-index: 10002;
+  pointer-events: none;
 }
-@supports (font-kerning: normal){ .cd-has-cdnote::after{ content:'🖊'; } }
+
+/* priority colors for folded corner */
+.cd-prio-0::before { border-bottom-color: #FFD952; } /* normal - warm yellow */
+.cd-prio-1::before { border-bottom-color: #FFD1A8; } /* important - light orange */
+.cd-prio-2::before { border-bottom-color: #FF7B7B; } /* urgent - red */
+
+/* In some table layouts pseudo-elements can be clipped; ensure cells allow visible overflow for markers */
+.cd-matrix td, .cd-matrix th { overflow: visible; }
+
+/* Inline SVG marker styles (always visible, positioned top-right) */
+.cd-svg-corner, .cd-svg-pen, .cd-svg-chat { position: absolute !important; right: 0 !important; top: 0 !important; z-index: 10050 !important; pointer-events: none !important; }
+.cd-svg-pen { right: 2px !important; top: 1px !important; }
+.cd-svg-chat { right: 6px !important; top: 4px !important; opacity: .95 !important; }
+
+/* wrapper for absolute markers to avoid theme clipping */
+.cd-marker-abs { position: absolute !important; right: 0 !important; top: 0 !important; width: 20px !important; height: 20px !important; pointer-events: none !important; z-index: 10040 !important; display:block !important; }
+.cd-marker-abs.cd-marker-chat { right: 6px !important; top: 4px !important; }
+
+/* inline fallback marker (emoji) shown if theme hides SVGs */
+.cd-inline-marker { position: absolute !important; right: 6px !important; top: 2px !important; font-size: 11px !important; color: #5b4300 !important; z-index: 10060 !important; pointer-events: none !important; opacity: .95 !important; }
+
+/* ensure td position is relative so absolute elements inside position correctly */
+.cd-matrix td, .cd-matrix th { position: relative !important; }
+
+/* custom tooltip */
+.cd-tooltip { position: absolute; z-index: 10000; background: #111; color: #fff; padding: 8px 10px; border-radius: 6px; font-size: 13px; max-width: 320px; box-shadow: 0 6px 18px rgba(0,0,0,.18); white-space: pre-wrap; }
+.cd-tooltip .hd { font-weight:700; margin-bottom:4px; }
 
 /* Floating note editor */
 #cd-note-pop { position: fixed; z-index: 9999; background:#fff; border:1px solid #ddd; border-radius:10px; padding:10px;
