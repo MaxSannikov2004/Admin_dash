@@ -101,9 +101,12 @@ class api {
             }
         }
 
+        // Attach curator notes only if the current user may comment (curator role).
+        $cancomment = \has_capability('local/admindash:comment', \context_course::instance($courseid));
         $this->attach_notes($cells, $courseid, $groupid, $userids, 'grade', array_column($outitems,'id'));
+        
 
-        return ['students'=>$outstudents, 'items'=>$outitems, 'cells'=>$cells];
+        return ['students'=>$outstudents, 'items'=>$outitems, 'cells'=>$cells, 'cancomment'=> (bool)$cancomment];
     }
 
     public function get_attendance_by_group(int $courseid, int $groupid=0, int $from=0, int $to=2147483647): array {
@@ -117,8 +120,9 @@ class api {
         }
         $outstudents = []; $userids=[]; foreach ($students as $u) { $outstudents[] = ['id'=>(int)$u->id, 'name'=>fullname($u)]; $userids[]=(int)$u->id; }
 
-        $outsessions = []; $cells = []; $kpi = 0.0;
+        $outsessions = []; $cells = []; $kpi = 0.0; $attendance_available = false;
         if ($DB->get_manager()->table_exists('attendance_sessions')) {
+            $attendance_available = true;
             $sessions = $DB->get_records_sql("SELECT s.id, s.sessdate FROM {attendance_sessions} s JOIN {attendance} a ON a.id=s.attendanceid WHERE a.course=:cid AND s.sessdate BETWEEN :from AND :to ORDER BY s.sessdate ASC", ['cid'=>$courseid,'from'=>$from,'to'=>$to]);
             foreach ($sessions as $s) { $outsessions[] = ['id'=>(int)$s->id, 'date'=>(int)$s->sessdate]; }
             if ($outsessions) {
@@ -142,9 +146,12 @@ class api {
             }
         }
 
+        // Attach curator notes only if the current user may comment (curator role).
+        $cancomment = \has_capability('local/admindash:comment', \context_course::instance($courseid));
         $this->attach_notes($cells, $courseid, $groupid, $userids, 'att', array_column($outsessions,'id'));
+        
 
-        return ['students'=>$outstudents, 'sessions'=>$outsessions, 'cells'=>$cells, 'kpi'=>$kpi];
+        return ['students'=>$outstudents, 'sessions'=>$outsessions, 'cells'=>$cells, 'kpi'=>$kpi, 'cancomment'=> (bool)$cancomment, 'attendance_available' => (bool)$attendance_available];
     }
 
     private function attach_notes(array &$cells, int $courseid, int $groupid, array $userids, string $itemtype, array $itemids): void {
@@ -153,20 +160,22 @@ class api {
         list($uins, $up) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
         list($iins,  $ip) = $DB->get_in_or_equal($itemids, SQL_PARAMS_NAMED);
         $params = ['cid'=>$courseid, 'gid'=>$groupid, 't'=>$itemtype] + $up + $ip;
-        $recs = $DB->get_records_sql("SELECT userid, itemid, note FROM {local_admindash_notes} WHERE courseid=:cid AND groupid=:gid AND itemtype=:t AND userid $uins AND itemid $iins", $params);
+        $recs = $DB->get_records_sql("SELECT userid, itemid, note, priority FROM {local_admindash_notes} WHERE courseid=:cid AND groupid=:gid AND itemtype=:t AND userid $uins AND itemid $iins", $params);
         foreach ($recs as $r) {
             $uid = (int)$r->userid; $iid = (int)$r->itemid;
             if (!isset($cells[$uid])) { $cells[$uid] = []; }
             if (!isset($cells[$uid][$iid])) { $cells[$uid][$iid] = []; }
+            $p = isset($r->priority) ? (int)$r->priority : 0;
             if (is_array($cells[$uid][$iid])) {
                 $cells[$uid][$iid]['cdnote'] = (string)$r->note;
+                $cells[$uid][$iid]['cdpriority'] = $p;
             } else {
-                $cells[$uid][$iid] = ['val'=>$cells[$uid][$iid], 'cdnote'=>(string)$r->note];
+                $cells[$uid][$iid] = ['val'=>$cells[$uid][$iid], 'cdnote'=>(string)$r->note, 'cdpriority'=>$p];
             }
         }
     }
 
-    public function save_note(int $courseid, int $groupid, int $userid, string $itemtype, int $itemid, string $note): array {
+    public function save_note(int $courseid, int $groupid, int $userid, string $itemtype, int $itemid, string $note, int $priority = 0): array {
         global $DB, $USER;
         \require_capability('local/admindash:comment', \context_course::instance($courseid));
         $note = trim(clean_text($note, FORMAT_PLAIN));
@@ -182,13 +191,14 @@ class api {
 
         if ($existing) {
             $existing->note = $note;
+            $existing->priority = $priority;
             $existing->authorid = $USER->id;
             $existing->timemodified = $now;
             $DB->update_record('local_admindash_notes', $existing);
             $id = $existing->id;
         } else {
             $rec = (object)$where + (object)[
-                'note'=>$note,'authorid'=>$USER->id,'timecreated'=>$now,'timemodified'=>$now
+                'note'=>$note,'priority'=>$priority,'authorid'=>$USER->id,'timecreated'=>$now,'timemodified'=>$now
             ];
             $id = $DB->insert_record('local_admindash_notes', $rec);
         }
